@@ -25,7 +25,7 @@ The config is the normal `wg-quick` syntax.
 The name is added as a comment as `wg-quick` doesn't like surplus config entries.
 The first IP address in the `AllowedIPs` will be used to ping the host.
 
-```
+```ini
 [Peer]
 # Name = The very secret node in antarctica
 PublicKey = [...]
