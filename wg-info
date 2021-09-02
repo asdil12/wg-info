@@ -43,7 +43,7 @@ peers = {}
 def read_config(interface):
 	peer_section = False
 
-	peer_name = ""
+	peer_name = "*nameless*"
 	peer_pubkey = ""
 	peer_ip = ""
 
@@ -51,12 +51,12 @@ def read_config(interface):
 		for line in cfg.readlines():
 			line = line.strip()
 			if line == "[Peer]":
-				if peer_section and peer_name and peer_pubkey:
+				if peer_section and peer_pubkey:
 					peers[peer_pubkey] = {
 						'name': peer_name,
 						'ip': peer_ip,
 					}
-					peer_name = ""
+					peer_name = "*nameless*"
 					peer_pubkey = ""
 					peer_ip = ""
 				peer_section = True
@@ -67,7 +67,7 @@ def read_config(interface):
 					peer_name = line.split('=', 1)[-1].strip()
 				elif line.startswith("AllowedIPs") and not peer_ip:
 					peer_ip = line.split('=', 1)[-1].strip().split(',')[0].split('/')[0]
-		if peer_section and peer_name and peer_pubkey:
+		if peer_section and peer_pubkey:
 			peers[peer_pubkey] = {
 				'name': peer_name,
 				'ip': peer_ip,
