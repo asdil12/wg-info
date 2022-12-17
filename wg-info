@@ -135,7 +135,18 @@ def lookahead(iterable):
 	yield last, False
 
 
+def get_up_interfaces(interfaces):
+	output = subprocess.check_output(["ip", "link"])
+	up = []
+	for line in re.findall(b"\s?\d+: .*:[^\n]+", output):
+		interface = line.split(b':')[1].decode('utf-8').strip()
+		if interface in interfaces:
+			up.append(interface)
+	return up
+
+
 interfaces = [i.replace('.conf', '') for i in os.listdir('/etc/wireguard/') if i.endswith('.conf')]
+interfaces = get_up_interfaces(interfaces)
 for interface in interfaces:
 	read_config(interface)
 
