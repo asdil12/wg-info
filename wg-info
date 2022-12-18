@@ -145,6 +145,10 @@ def get_up_interfaces(interfaces):
 	return up
 
 
+if os.getuid() != 0:
+    print(redbldfmt + "\nERROR: " + yellowfmt + "The script must run as root\n" + endfmt)
+    exit(-1)
+
 interfaces = [i.replace('.conf', '') for i in os.listdir('/etc/wireguard/') if i.endswith('.conf')]
 interfaces = get_up_interfaces(interfaces)
 for interface in interfaces:
@@ -165,10 +169,11 @@ if 'ping' in sys.argv:
 if output == 'html':
 	print('<pre>')
 
-for interface, has_more in lookahead(interfaces):
-	show_info(interface)
-	if has_more:
-		print("\n")
+if len(interfaces) > 0:
+	for interface, has_more in lookahead(interfaces):
+		show_info(interface)
+		if has_more:
+			print("\n")
 
 if output == 'html':
 	print('</pre>')
