@@ -57,6 +57,7 @@ def read_config(interface):
 	peer_name = "*nameless*"
 	peer_pubkey = ""
 	peer_ip = ""
+	peer_online = ""
 
 	with open('/etc/wireguard/%s.conf' % interface) as cfg:
 		for line in cfg.readlines():
@@ -97,18 +98,21 @@ def show_info(interface):
 			peer_section = True
 			peer_pubkey = line.split(':', 1)[1].strip()
 
-			if peers[peer_pubkey].get('online', True):
+			if peers[peer_pubkey].get('online') is None:
+				colorfmt = yellowfmt
+				colorbldfmt = yellowbldfmt
+			elif peers[peer_pubkey].get('online') is True:
 				colorfmt = greenfmt
 				colorbldfmt = greenbldfmt
 			else:
 				colorfmt = redfmt
 				colorbldfmt = redbldfmt
-			print('  ' + colorbldfmt + 'peer' + endfmt + ': ' + colorfmt +
+			print('  ' + 'peer: ' + colorfmt +
 				  peers[peer_pubkey]['name'] + endfmt + ' ('+peer_pubkey+')' )
 		elif line.startswith('interface:'):
 			peer_section = False
 			interface = line.split(':', 1)[1].strip()
-			print(yellowbldfmt + 'interface' + endfmt + ': ' + yellowfmt + interface + endfmt)
+			print('interface: ' + yellowfmt + interface + endfmt)
 		elif line.startswith('preshared key:') or line.startswith('private key:'):
 			continue
 		elif line.startswith('endpoint'):
