@@ -5,8 +5,54 @@ import sys
 import re
 import subprocess
 import threading
+import argparse
+import textwrap
 
-if 'html' in sys.argv:
+class PreserveWhiteSpaceWrapRawTextHelpFormatter(argparse.RawTextHelpFormatter):
+	def __add_whitespace(self, idx, iWSpace, text):
+		if idx == 0:
+			return text
+		return (' ' * iWSpace) + text
+
+	def _split_lines(self, text, width):
+		textRows = text.splitlines()
+		for idx,line in enumerate(textRows):
+			search = re.search('\s*[\d\-]*\.?\s*', line)
+			if line.strip() == '':
+				textRows[idx] = ' '
+			elif search:
+				lWSpace = search.end()
+				lines = [self.__add_whitespace(i,lWSpace,x) for i,x in enumerate(textwrap.wrap(line, width))]
+				textRows[idx] = lines
+		return [item for sublist in textRows for item in sublist]
+
+
+ap = argparse.ArgumentParser(
+	formatter_class=PreserveWhiteSpaceWrapRawTextHelpFormatter,
+	description=textwrap.dedent('''\
+		Wireguard Info
+		==============
+
+		This tool enhances the output of 'wg show' to include node names.
+		Also it can ping the nodes (using the first ip in AllowedIPs)
+		and indicate the online status via red/green color coding.
+
+		It expects you to use wg-quick and reads the wg-quick config at
+		/etc/wireguard/INTERFACE.conf
+
+		The human readable peer names are expected in the wg-quick config 
+		within a comment like this:
+		[Peer]
+		# Name = Very secret node in antarctica
+
+	'''))
+ap.add_argument('--html', action='store_true', help="Format output as HTML")
+ap.add_argument('--tty', action='store_true', help="Force terminal colors even when writing to pipe")
+ap.add_argument('-p', '--ping', action='store_true', help="Ping all nodes (in parallel) and show online status")
+ap.add_argument('-i', '--interface', help="Only show status for this interface")
+args = ap.parse_args()
+
+if args.html:
 	output = 'html'
 	redfmt = '<span style="color: red;">'
 	redbldfmt = '<span style="color: red; font-weight: bold;">'
@@ -16,7 +62,7 @@ if 'html' in sys.argv:
 	yellowbldfmt = '<span style="color: orange; font-weight: bold;">'
 	bldfmt = '<span style="font-weight: bold;">'
 	endfmt = '</span>'
-elif sys.stdout.isatty() or 'tty' in sys.argv:
+elif sys.stdout.isatty() or args.tty:
 	output = 'tty'
 	redfmt = '\033[0;31m'
 	redbldfmt = '\033[1;31m'
@@ -150,13 +196,15 @@ if os.getuid() != 0:
     exit(-1)
 
 interfaces = [i.replace('.conf', '') for i in os.listdir('/etc/wireguard/') if i.endswith('.conf')]
+if args.interface:
+	interfaces = [args.interface]
 interfaces = get_up_interfaces(interfaces)
 for interface in interfaces:
 	read_config(interface)
 
 
 # Ping all peers in parallel so that this will just take 1 second in total
-if 'ping' in sys.argv:
+if args.ping:
 	threads = []
 	for peer in peers:
 		th = threading.Thread(target=ping, args=(peer,), daemon=True)

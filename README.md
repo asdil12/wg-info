@@ -10,7 +10,8 @@ The output is colored (if writing to a tty or explicitly requested) using termin
 ## Usage
 
 ```
-wg-info [PARAMS]
+wg-info [-h] [--html] [--tty] [--ping] [-i INTERFACE]
+
 ```
 
 Possible parameters:
