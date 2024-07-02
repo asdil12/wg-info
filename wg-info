@@ -17,7 +17,7 @@ class PreserveWhiteSpaceWrapRawTextHelpFormatter(argparse.RawTextHelpFormatter):
 	def _split_lines(self, text, width):
 		textRows = text.splitlines()
 		for idx,line in enumerate(textRows):
-			search = re.search('\s*[\d\-]*\.?\s*', line)
+			search = re.search(r'\s*[\d\-]*\.?\s*', line)
 			if line.strip() == '':
 				textRows[idx] = ' '
 			elif search:
@@ -184,7 +184,7 @@ def lookahead(iterable):
 def get_up_interfaces(interfaces):
 	output = subprocess.check_output(["ip", "link"])
 	up = []
-	for line in re.findall(b"\s?\d+: .*:[^\n]+", output):
+	for line in re.findall(rb"\s?\d+: .*:[^\n]+", output):
 		interface = line.split(b':')[1].decode('utf-8').strip()
 		if interface in interfaces:
 			up.append(interface)
