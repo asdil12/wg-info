@@ -60,16 +60,24 @@ if args.html:
 	greenbldfmt = '<span style="color: green; font-weight: bold;">'
 	yellowfmt = '<span style="color: orange;">'
 	yellowbldfmt = '<span style="color: orange; font-weight: bold;">'
+	cyanfmt = '<span style="color: cyan;">'
+	cyanbldfmt = '<span style="color: cyan; font-weight: bold;">'
+	magentafmt = '<span style="color: magenta;">'
+	magentabldfmt = '<span style="color: magenta; font-weight: bold;">'
 	bldfmt = '<span style="font-weight: bold;">'
 	endfmt = '</span>'
 elif sys.stdout.isatty() or args.tty:
 	output = 'tty'
-	redfmt = '\033[0;31m'
-	redbldfmt = '\033[1;31m'
-	greenfmt = '\033[0;32m'
-	greenbldfmt = '\033[1;32m'
-	yellowfmt = '\033[0;33m'
-	yellowbldfmt = '\033[1;33m'
+	redfmt = '\033[31m'
+	redbldfmt = '\033[31;1m'
+	greenfmt = '\033[32m'
+	greenbldfmt = '\033[32;1m'
+	yellowfmt = '\033[33m'
+	yellowbldfmt = '\033[33;1m'
+	cyanfmt = '\033[36m'
+	cyanbldfmt = '\033[36;1m'
+	magentafmt = '\033[35m'
+	magentabldfmt = '\033[35;1m'
 	bldfmt = '\033[1m'
 	endfmt = '\033[0m'
 else:
@@ -80,6 +88,10 @@ else:
 	greenbldfmt = ''
 	yellowfmt = ''
 	yellowbldfmt = ''
+	cyanfmt = ''
+	cyanbldfmt = ''
+	magentafmt = ''
+	magentabldfmt = ''
 	bldfmt = ''
 	endfmt = ''
 
@@ -91,6 +103,7 @@ def read_config(interface):
 	peer_name = "*nameless*"
 	peer_pubkey = ""
 	peer_ip = ""
+	peer_online = ""
 
 	with open('/etc/wireguard/%s.conf' % interface) as cfg:
 		for line in cfg.readlines():
@@ -131,20 +144,38 @@ def show_info(interface):
 			peer_section = True
 			peer_pubkey = line.split(':', 1)[1].strip()
 
-			if peers[peer_pubkey].get('online', True):
+			if peers[peer_pubkey].get('online') is None:
+				colorfmt = yellowfmt
+				colorbldfmt = yellowbldfmt
+			elif peers[peer_pubkey].get('online') is True:
 				colorfmt = greenfmt
 				colorbldfmt = greenbldfmt
 			else:
 				colorfmt = redfmt
 				colorbldfmt = redbldfmt
-			print('  ' + colorbldfmt + 'peer' + endfmt + ': ' + colorfmt +
-				  peers[peer_pubkey]['name'] + ' ('+peer_pubkey+')' + endfmt)
+			print('  ' + 'peer: ' + colorfmt +
+				  peers[peer_pubkey]['name'] + endfmt + ' ('+peer_pubkey+')' )
 		elif line.startswith('interface:'):
 			peer_section = False
 			interface = line.split(':', 1)[1].strip()
-			print(yellowbldfmt + 'interface' + endfmt + ': ' + yellowfmt + interface + endfmt)
+			print('interface: ' + yellowfmt + interface + endfmt)
 		elif line.startswith('preshared key:') or line.startswith('private key:'):
 			continue
+		elif line.startswith('endpoint'):
+			key = line.split(':')[0].strip()
+			value = line.split(':', 1)[1].strip()
+			indent = '	' if peer_section else '  '
+			print(indent + key + ': ' + cyanbldfmt + value + endfmt)
+		elif line.startswith('allowed ips'):
+			key = line.split(':')[0].strip()
+			value = line.split(':', 1)[1].strip()
+			indent = '	' if peer_section else '  '
+			print(indent + key + ': ' + greenbldfmt + value + endfmt)
+		elif line.startswith('latest handshake'):
+			key = line.split(':')[0].strip()
+			value = line.split(':', 1)[1].strip()
+			indent = '	' if peer_section else '  '
+			print(indent + key + ': ' + magentabldfmt + value + endfmt)
 		elif line:
 			key = line.split(':')[0].strip()
 			value = line.split(':', 1)[1].strip()
